@@ -2,9 +2,9 @@ import "./globals.css";
 import BotonInstalar from "./BotonInstalar";
 
 export const metadata = {
-  title: "Cuidar mis Necesidades",
-  description: "Ideas con IA para cuidar necesidades desde la Comunicación No Violenta",
-  applicationName: "Cuidar mis Necesidades",
+  title: "Cuidar Necesidades",
+  description: "Ideas con IA para cuidar necesidades desde la CNV, con lenguaje de partes",
+  applicationName: "Cuidar Necesidades",
   appleWebApp: {
     capable: true,
     title: "Necesidades",

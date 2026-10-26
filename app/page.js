@@ -161,8 +161,8 @@ export default function Home() {
   return (
     <main className="contenedor">
       <header className="encabezado">
-        <h1>Cuidar mis Necesidades</h1>
-        <p>Ideas para pedir y actuar desde la Comunicación No Violenta</p>
+        <h1>Cuidar Necesidades</h1>
+                <p>Ideas para pedir y actuar desde la CNV, con lenguaje de partes</p>
       </header>
 
       {/* Situación */}

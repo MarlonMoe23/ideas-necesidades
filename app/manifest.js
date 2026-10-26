@@ -1,8 +1,8 @@
 export default function manifest() {
   return {
-    name: "Cuidar mis Necesidades",
+    name: "Cuidar Necesidades",
     short_name: "Necesidades",
-    description: "Ideas con IA para cuidar necesidades desde la Comunicación No Violenta",
+    description: "Ideas con IA para cuidar necesidades desde la CNV, con lenguaje de partes",
     start_url: "/",
     display: "standalone",
     background_color: "#f1f5f9",
