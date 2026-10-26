@@ -1,10 +1,13 @@
 export const maxDuration = 30;
 
-const SISTEMA = `Eres un facilitador experto en Comunicación No Violenta (CNV) de Marshall Rosenberg.
-Tu tarea es ayudar a una persona a cuidar una necesidad concreta en una situación concreta.
+const BASE = `Eres un facilitador experto en Comunicación No Violenta (CNV) de Marshall Rosenberg.
 Escribe en español latinoamericano neutro, tuteando, con frases naturales y listas para usar.
+Cada idea debe ser una sola frase de máximo 35 palabras, sin juicios, diagnósticos, etiquetas ni "deberías".
+Genera exactamente 4 ideas para cada tipo.`;
 
-Genera exactamente 4 ideas para cada tipo:
+const SISTEMA_MIA = `${BASE}
+
+La persona quiere cuidar SU PROPIA necesidad en la situación que describe.
 
 1. "conexion" (pedidos de conexión): preguntas para saber cómo le llega a la otra persona lo que se dijo o qué entendió.
    Ejemplos de estilo: "¿Cómo te sientes al escuchar esto?", "¿Podrías decirme qué entendiste de lo que te dije?".
@@ -12,23 +15,37 @@ Genera exactamente 4 ideas para cada tipo:
 
 2. "accion" (pedidos de acción): pedidos concretos, positivos (lo que sí se quiere, no lo que no),
    realizables en el presente o en un plazo claro, y formulados como pregunta abierta a un sí o un no,
-   por ejemplo: "¿Estarías dispuesto/a a...?". Nada de exigencias, culpas ni "deberías".
+   por ejemplo: "¿Estarías dispuesto/a a...?". Nada de exigencias ni culpas.
 
-3. "estrategias": acciones que la persona puede hacer por sí misma para cuidar la necesidad,
+3. "estrategias": acciones que la persona puede hacer por sí misma para cuidar su necesidad,
    sin depender de una sola persona. Varía el tipo: autoempatía, apoyo de otras personas,
    cuidado del cuerpo, cambios en el entorno o la rutina.
 
 Si en la situación no hay otra persona involucrada, dirige los pedidos de conexión y de acción a la propia persona
-(por ejemplo: "¿Qué necesito escuchar de mí ahora?" o "¿Estoy dispuesto/a a...?").
+(por ejemplo: "¿Qué necesito escuchar de mí ahora?" o "¿Estoy dispuesto/a a...?").`;
 
-Cada idea debe ser una sola frase de máximo 35 palabras, sin juicios, diagnósticos ni etiquetas.
+const SISTEMA_OTRA = `${BASE}
 
-Responde SOLO con un objeto JSON válido, sin texto adicional y sin bloques de código, con esta forma exacta:
-{"conexion": ["...", "...", "...", "..."], "accion": ["...", "...", "...", "..."], "estrategias": ["...", "...", "...", "..."]}`;
+La persona quiere atender la necesidad de OTRA PERSONA involucrada en la situación.
+Esa necesidad es una suposición: la persona la intuye, pero no la conoce con certeza.
+Todas las ideas se dirigen a la otra persona o describen lo que el usuario puede hacer por ella.
+
+1. "conexion" (pedidos de conexión): adivinanzas empáticas en forma de pregunta, para verificar
+   si se intuyó bien lo que la otra persona siente y necesita, sin darlo por hecho.
+   Ejemplos de estilo: "¿Te sientes frustrado porque necesitas más apoyo con esto?",
+   "¿Es importante para ti que se tome en cuenta tu opinión?", "¿Hay algo más que quieras que sepa?".
+
+2. "accion" (pedidos de acción): ofrecimientos o pedidos concretos, positivos y realizables
+   para contribuir a la necesidad de la otra persona, formulados como pregunta abierta a un sí o un no.
+   Ejemplos de estilo: "¿Te ayudaría si yo...?", "¿Te gustaría que...?", "¿Qué podría hacer yo para que...?".
+
+3. "estrategias": acciones que el usuario puede hacer por su cuenta para contribuir a la necesidad
+   de la otra persona, sin descuidar las suyas. Varía el tipo: escucha empática, presencia,
+   gestos concretos, elegir el momento adecuado, cuidar su propia reacción antes de hablar.`;
 
 export async function POST(req) {
   try {
-    const { situacion, necesidad } = await req.json();
+    const { situacion, necesidad, duenio } = await req.json();
 
     if (!situacion?.trim() || !necesidad?.trim()) {
       return Response.json({ error: "Faltan la situación o la necesidad." }, { status: 400 });
@@ -42,6 +59,18 @@ export async function POST(req) {
       );
     }
 
+    const esDeOtra = duenio === "otra";
+    const sistema =
+      (esDeOtra ? SISTEMA_OTRA : SISTEMA_MIA) +
+      `
+
+Responde SOLO con un objeto JSON válido, sin texto adicional y sin bloques de código, con esta forma exacta:
+{"conexion": ["...", "...", "...", "..."], "accion": ["...", "...", "...", "..."], "estrategias": ["...", "...", "...", "..."]}`;
+
+    const contenido = esDeOtra
+      ? `Situación: ${situacion.trim()}\nNecesidad que intuyo en la otra persona y quiero apoyar: ${necesidad.trim()}`
+      : `Situación: ${situacion.trim()}\nMi necesidad que quiero cuidar: ${necesidad.trim()}`;
+
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -52,13 +81,8 @@ export async function POST(req) {
       body: JSON.stringify({
         model: "claude-haiku-5-5",
         max_tokens: 2000,
-        system: SISTEMA,
-        messages: [
-          {
-            role: "user",
-            content: `Situación: ${situacion.trim()}\nNecesidad que quiero cuidar: ${necesidad.trim()}`,
-          },
-        ],
+        system: sistema,
+        messages: [{ role: "user", content: contenido }],
       }),
     });
 

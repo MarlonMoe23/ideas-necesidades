@@ -291,3 +291,27 @@ textarea:focus,
   color: var(--suave);
   margin-top: 24px;
 }
+
+.selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.opcion {
+  background: var(--fondo);
+  color: var(--texto);
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.opcion.activa {
+  background: var(--azul);
+  color: #fff;
+  border-color: var(--azul);
+  font-weight: 600;
+}

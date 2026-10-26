@@ -11,31 +11,55 @@ function normalizar(texto) {
     .trim();
 }
 
-const SECCIONES = [
-  {
-    clave: "conexion",
-    titulo: "Pedidos de conexión",
-    icono: "🤝",
-    descripcion: "Para saber cómo le llega a la otra persona lo que dices.",
-  },
-  {
-    clave: "accion",
-    titulo: "Pedidos de acción",
-    icono: "🎯",
-    descripcion: "Acciones concretas, positivas y realizables que puedes pedir.",
-  },
-  {
-    clave: "estrategias",
-    titulo: "Estrategias",
-    icono: "🌱",
-    descripcion: "Cosas que puedes hacer tú para cuidar tu necesidad.",
-  },
-];
+const SECCIONES = {
+  mia: [
+    {
+      clave: "conexion",
+      titulo: "Pedidos de conexión",
+      icono: "🤝",
+      descripcion: "Para saber cómo le llega a la otra persona lo que dices.",
+    },
+    {
+      clave: "accion",
+      titulo: "Pedidos de acción",
+      icono: "🎯",
+      descripcion: "Acciones concretas, positivas y realizables que puedes pedir.",
+    },
+    {
+      clave: "estrategias",
+      titulo: "Estrategias",
+      icono: "🌱",
+      descripcion: "Cosas que puedes hacer tú para cuidar tu necesidad.",
+    },
+  ],
+  otra: [
+    {
+      clave: "conexion",
+      titulo: "Pedidos de conexión",
+      icono: "🤝",
+      descripcion: "Preguntas empáticas para verificar si adivinaste su necesidad.",
+    },
+    {
+      clave: "accion",
+      titulo: "Pedidos de acción",
+      icono: "🎯",
+      descripcion: "Ofrecimientos concretos para apoyar su necesidad.",
+    },
+    {
+      clave: "estrategias",
+      titulo: "Estrategias",
+      icono: "🌱",
+      descripcion: "Lo que puedes hacer tú para contribuir a su necesidad sin descuidarte.",
+    },
+  ],
+};
 
 export default function Home() {
   const [situacion, setSituacion] = useState("");
   const [necesidad, setNecesidad] = useState("");
+  const [duenio, setDuenio] = useState("mia"); // "mia" o "otra"
   const [ideas, setIdeas] = useState(null);
+  const [duenioConsultado, setDuenioConsultado] = useState("mia");
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
   const [aviso, setAviso] = useState("");
@@ -77,11 +101,13 @@ export default function Home() {
         body: JSON.stringify({
           situacion: situacion.trim(),
           necesidad: necesidad.trim(),
+          duenio,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Error desconocido");
       setIdeas(data);
+      setDuenioConsultado(duenio);
       setTimeout(() => {
         document.getElementById("resultados")?.scrollIntoView({ behavior: "smooth" });
       }, 100);
@@ -92,12 +118,17 @@ export default function Home() {
     }
   };
 
+  const tituloResultado = () =>
+    duenioConsultado === "mia"
+      ? `Ideas para cuidar mi necesidad de ${necesidad.trim()}`
+      : `Ideas para apoyar la necesidad de ${necesidad.trim()} de la otra persona`;
+
   const textoCompleto = () => {
     if (!ideas) return "";
     const bloque = (titulo, lista) =>
       `*${titulo}:*\n${(lista || []).map((i) => `• ${i}`).join("\n")}`;
     return [
-      `*Ideas para cuidar mi necesidad de ${necesidad.trim()}*`,
+      `*${tituloResultado()}*`,
       `*Situación:* ${situacion.trim()}`,
       bloque("Pedidos de conexión", ideas.conexion),
       bloque("Pedidos de acción", ideas.accion),
@@ -121,6 +152,7 @@ export default function Home() {
   const nuevaConsulta = () => {
     setSituacion("");
     setNecesidad("");
+    setDuenio("mia");
     setIdeas(null);
     setError("");
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -147,7 +179,28 @@ export default function Home() {
       {/* Necesidad */}
       <section className="tarjeta">
         <h2>2. La necesidad</h2>
-        <p className="ayuda">Elige una de la lista o escríbela tú mismo.</p>
+
+        <p className="ayuda">¿De quién es la necesidad que quieres atender?</p>
+        <div className="selector">
+          <button
+            className={`opcion ${duenio === "mia" ? "activa" : ""}`}
+            onClick={() => setDuenio("mia")}
+          >
+            🙋 Mía
+          </button>
+          <button
+            className={`opcion ${duenio === "otra" ? "activa" : ""}`}
+            onClick={() => setDuenio("otra")}
+          >
+            👤 De la otra persona
+          </button>
+        </div>
+
+        <p className="ayuda">
+          {duenio === "mia"
+            ? "Elige tu necesidad de la lista o escríbela tú mismo."
+            : "Elige la necesidad que intuyes en la otra persona o escríbela."}
+        </p>
 
         <div className="campo-envoltura">
           <input
@@ -206,10 +259,10 @@ export default function Home() {
       {ideas && (
         <div id="resultados" style={{ marginTop: 20 }}>
           <p className="resumen-consulta">
-            Ideas para cuidar tu necesidad de <strong>{necesidad.trim()}</strong>
+            <strong>{tituloResultado()}</strong>
           </p>
 
-          {SECCIONES.map((s) => (
+          {SECCIONES[duenioConsultado].map((s) => (
             <section key={s.clave} className="tarjeta seccion">
               <h2>
                 <span>{s.icono}</span> {s.titulo}
