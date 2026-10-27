@@ -9,9 +9,9 @@ export default function manifest() {
     theme_color: "#0d9488",
     lang: "es",
     icons: [
-      { src: "/icono?s=192", sizes: "192x192", type: "image/png", purpose: "any" },
-      { src: "/icono?s=512", sizes: "512x512", type: "image/png", purpose: "any" },
-      { src: "/icono?s=512", sizes: "512x512", type: "image/png", purpose: "maskable" },
+      { src: "/icono?s=192&v=2", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/icono?s=512&v=2", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/icono?s=512&v=2", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
   };
 }
