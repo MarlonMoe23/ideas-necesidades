@@ -436,7 +436,7 @@ export default function Home() {
         ) : ideas ? (
           "✨ Generar otras ideas"
         ) : (
-          "✨ Generar ideas con IA"
+          "✨ Generar ideas"
         )}
       </button>
       {error && <p className="error">{error}</p>}
