@@ -370,3 +370,59 @@ textarea:focus,
   color: var(--morado);
   font-weight: 600;
 }
+
+
+.yo-soy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 0.9rem;
+  color: var(--suave);
+}
+
+.opcion-mini {
+  background: var(--tarjeta);
+  color: var(--texto);
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.opcion-mini.activa {
+  background: var(--azul);
+  color: #fff;
+  border-color: var(--azul);
+  font-weight: 600;
+}
+
+.yo-soy.pendiente .opcion-mini {
+  border: 2px solid var(--morado);
+}
+
+.chip.incierta {
+  border-style: dashed;
+  border-color: var(--morado);
+  color: var(--morado);
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.chip.incierta.activo {
+  background: var(--morado);
+  color: #fff;
+  border-style: solid;
+}
+
+.chip.posible {
+  border: 2px solid var(--morado);
+  font-weight: 600;
+}
+
+.chip:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}

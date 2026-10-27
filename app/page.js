@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { necesidades } from "../lib/necesidades";
 import { sentimientos as listaSentimientos } from "../lib/sentimientos";
 
@@ -56,16 +56,38 @@ const SECCIONES = {
 };
 
 export default function Home() {
+  const [genero, setGenero] = useState(""); // "hombre" o "mujer"
   const [situacion, setSituacion] = useState("");
   const [duenio, setDuenio] = useState("mia"); // "mia" o "otra"
   const [sentimientos, setSentimientos] = useState([]);
   const [textoSentimiento, setTextoSentimiento] = useState("");
   const [necesidad, setNecesidad] = useState("");
+  const [necesidadIncierta, setNecesidadIncierta] = useState(false);
   const [ideas, setIdeas] = useState(null);
-  const [duenioConsultado, setDuenioConsultado] = useState("mia");
+  const [consulta, setConsulta] = useState({ duenio: "mia", necesidad: "", incierta: false });
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
   const [aviso, setAviso] = useState("");
+
+  // ── Género guardado en el celular ──────────────────────────────────────
+  useEffect(() => {
+    try {
+      const guardado = localStorage.getItem("cuidar_genero");
+      if (guardado === "hombre" || guardado === "mujer") setGenero(guardado);
+    } catch {}
+  }, []);
+
+  const elegirGenero = (g) => {
+    setGenero(g);
+    try {
+      localStorage.setItem("cuidar_genero", g);
+    } catch {}
+  };
+
+  const cambiarDuenio = (d) => {
+    setDuenio(d);
+    if (d === "mia") setNecesidadIncierta(false);
+  };
 
   // ── Sentimientos: sugerencias mientras se escribe ──────────────────────
   const filtroS = normalizar(textoSentimiento);
@@ -121,16 +143,25 @@ export default function Home() {
   };
 
   // ── Generar ideas ──────────────────────────────────────────────────────
-  const generar = async () => {
+  const generar = async (opciones = {}) => {
+    const nec = (opciones.necesidad ?? necesidad).trim();
+    const incierta = opciones.incierta ?? necesidadIncierta;
+
     setError("");
+    if (!genero) {
+      setError("Elige arriba si eres hombre o mujer.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
     if (!situacion.trim()) {
       setError("Escribe brevemente la situación.");
       return;
     }
-    if (!necesidad.trim()) {
+    if (!incierta && !nec) {
       setError("Elige o escribe una necesidad.");
       return;
     }
+
     setCargando(true);
     setIdeas(null);
     try {
@@ -140,14 +171,16 @@ export default function Home() {
         body: JSON.stringify({
           situacion: situacion.trim(),
           sentimientos,
-          necesidad: necesidad.trim(),
+          necesidad: incierta ? "" : nec,
+          incierta,
           duenio,
+          genero,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Error desconocido");
       setIdeas(data);
-      setDuenioConsultado(duenio);
+      setConsulta({ duenio, necesidad: incierta ? "" : nec, incierta });
       setTimeout(() => {
         document.getElementById("resultados")?.scrollIntoView({ behavior: "smooth" });
       }, 100);
@@ -158,10 +191,19 @@ export default function Home() {
     }
   };
 
-  const tituloResultado = () =>
-    duenioConsultado === "mia"
-      ? `Ideas para cuidar mi necesidad de ${necesidad.trim()}`
-      : `Ideas para apoyar la necesidad de ${necesidad.trim()} de la otra persona`;
+  // Al tocar una necesidad posible, se elige y se generan ideas enfocadas en ella
+  const elegirPosible = (p) => {
+    setNecesidad(p);
+    setNecesidadIncierta(false);
+    generar({ necesidad: p, incierta: false });
+  };
+
+  const tituloResultado = () => {
+    if (consulta.incierta) return "Ideas para acompañar a la otra persona y descubrir su necesidad";
+    return consulta.duenio === "mia"
+      ? `Ideas para cuidar mi necesidad de ${consulta.necesidad}`
+      : `Ideas para apoyar la necesidad de ${consulta.necesidad} de la otra persona`;
+  };
 
   const textoCompleto = () => {
     if (!ideas) return "";
@@ -170,6 +212,9 @@ export default function Home() {
     const partes = [`*${tituloResultado()}*`, `*Situación:* ${situacion.trim()}`];
     if (sentimientos.length > 0) {
       partes.push(`*Sentimientos:* ${sentimientos.join(", ")}`);
+    }
+    if (ideas.posibles?.length > 0) {
+      partes.push(`*Necesidades posibles:* ${ideas.posibles.join(", ")}`);
     }
     partes.push(
       bloque("Pedidos de conexión", ideas.conexion),
@@ -198,6 +243,7 @@ export default function Home() {
     setSentimientos([]);
     setTextoSentimiento("");
     setNecesidad("");
+    setNecesidadIncierta(false);
     setIdeas(null);
     setError("");
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -208,6 +254,22 @@ export default function Home() {
       <header className="encabezado">
         <h1>Cuidar Necesidades</h1>
         <p>Ideas para pedir y actuar desde la CNV, con lenguaje de partes</p>
+
+        <div className={`yo-soy ${!genero ? "pendiente" : ""}`}>
+          <span>Yo soy:</span>
+          <button
+            className={`opcion-mini ${genero === "hombre" ? "activa" : ""}`}
+            onClick={() => elegirGenero("hombre")}
+          >
+            👨 Hombre
+          </button>
+          <button
+            className={`opcion-mini ${genero === "mujer" ? "activa" : ""}`}
+            onClick={() => elegirGenero("mujer")}
+          >
+            👩 Mujer
+          </button>
+        </div>
       </header>
 
       {/* 1. Situación */}
@@ -229,13 +291,13 @@ export default function Home() {
         <div className="selector">
           <button
             className={`opcion ${duenio === "mia" ? "activa" : ""}`}
-            onClick={() => setDuenio("mia")}
+            onClick={() => cambiarDuenio("mia")}
           >
             🙋 Míos
           </button>
           <button
             className={`opcion ${duenio === "otra" ? "activa" : ""}`}
-            onClick={() => setDuenio("otra")}
+            onClick={() => cambiarDuenio("otra")}
           >
             👤 De la otra persona
           </button>
@@ -308,49 +370,67 @@ export default function Home() {
             : "Elige la necesidad que intuyes en la otra persona o escríbela."}
         </p>
 
-        <div className="campo-envoltura">
-          <input
-            className="campo"
-            type="text"
-            value={necesidad}
-            onChange={(e) => setNecesidad(e.target.value)}
-            placeholder="Busca o escribe una necesidad..."
-          />
-          {necesidad && (
-            <button className="limpiar" onClick={() => setNecesidad("")} aria-label="Borrar">
-              ×
-            </button>
-          )}
-        </div>
-
-        {necesidad.trim() && !esDeLaLista && (
-          <p className="nota">
-            Se usará la necesidad que escribiste: <strong>{necesidad.trim()}</strong>
-          </p>
+        {duenio === "otra" && (
+          <button
+            className={`chip incierta ${necesidadIncierta ? "activo" : ""}`}
+            onClick={() => setNecesidadIncierta(!necesidadIncierta)}
+          >
+            🤔 No sé cuál es su necesidad
+          </button>
         )}
 
-        <div className="lista-necesidades">
-          {categoriasFiltradas.map((c) => (
-            <div key={c.categoria} className="categoria">
-              <h3>{c.categoria}</h3>
-              <div className="chips">
-                {c.items.map((item) => (
-                  <button
-                    key={item}
-                    className={`chip ${normalizar(item) === filtro ? "activo" : ""}`}
-                    onClick={() => setNecesidad(item)}
-                  >
-                    {item}
-                  </button>
-                ))}
-              </div>
+        {necesidadIncierta ? (
+          <p className="nota">
+            La IA te propondrá <strong>necesidades posibles</strong> y preguntas para descubrir
+            cuál está viva en la otra persona.
+          </p>
+        ) : (
+          <>
+            <div className="campo-envoltura">
+              <input
+                className="campo"
+                type="text"
+                value={necesidad}
+                onChange={(e) => setNecesidad(e.target.value)}
+                placeholder="Busca o escribe una necesidad..."
+              />
+              {necesidad && (
+                <button className="limpiar" onClick={() => setNecesidad("")} aria-label="Borrar">
+                  ×
+                </button>
+              )}
             </div>
-          ))}
-        </div>
+
+            {necesidad.trim() && !esDeLaLista && (
+              <p className="nota">
+                Se usará la necesidad que escribiste: <strong>{necesidad.trim()}</strong>
+              </p>
+            )}
+
+            <div className="lista-necesidades">
+              {categoriasFiltradas.map((c) => (
+                <div key={c.categoria} className="categoria">
+                  <h3>{c.categoria}</h3>
+                  <div className="chips">
+                    {c.items.map((item) => (
+                      <button
+                        key={item}
+                        className={`chip ${normalizar(item) === filtro ? "activo" : ""}`}
+                        onClick={() => setNecesidad(item)}
+                      >
+                        {item}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </section>
 
       {/* Botón IA */}
-      <button className="boton-ia" onClick={generar} disabled={cargando}>
+      <button className="boton-ia" onClick={() => generar()} disabled={cargando}>
         {cargando ? (
           <span className="pulso">Generando ideas...</span>
         ) : ideas ? (
@@ -368,7 +448,30 @@ export default function Home() {
             <strong>{tituloResultado()}</strong>
           </p>
 
-          {SECCIONES[duenioConsultado].map((s) => (
+          {ideas.posibles?.length > 0 && (
+            <section className="tarjeta seccion">
+              <h2>
+                <span>🤔</span> Necesidades posibles
+              </h2>
+              <p className="ayuda">
+                Toca una para generar ideas enfocadas en esa necesidad.
+              </p>
+              <div className="chips">
+                {ideas.posibles.map((p) => (
+                  <button
+                    key={p}
+                    className="chip posible"
+                    onClick={() => elegirPosible(p)}
+                    disabled={cargando}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {SECCIONES[consulta.duenio].map((s) => (
             <section key={s.clave} className="tarjeta seccion">
               <h2>
                 <span>{s.icono}</span> {s.titulo}

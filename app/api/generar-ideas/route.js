@@ -6,11 +6,24 @@ Escribe en español latinoamericano neutro, tuteando, con frases naturales y lis
 Cada idea debe ser una sola frase de máximo 40 palabras, sin juicios, diagnósticos, etiquetas ni "deberías".
 Genera exactamente 4 ideas para cada tipo.
 
+PERSPECTIVA (MUY IMPORTANTE):
+La situación la cuenta el usuario en primera persona: "yo" siempre es el usuario y "la otra persona" es quien aparece en la situación.
+Antes de escribir, identifica qué hizo y qué vivió cada uno.
+Nunca atribuyas a la otra persona lo que vivió el usuario, ni al revés.
+Ejemplo: si el usuario esperó porque la otra persona llegó tarde, la espera es experiencia del usuario;
+la otra persona es quien llegó tarde.
+
+GÉNERO:
+Se te indica si el usuario es hombre o mujer: usa ese género en todo lo que se refiere al usuario
+(por ejemplo dispuesto o dispuesta, cansado o cansada).
+El género de la otra persona dedúcelo de la situación (amiga, jefe, mamá, pareja...). Si no se puede saber, usa expresiones sin género.
+Cuando hables de los dos juntos y son de distinto género, usa el plural mixto: "ambos", "juntos", "los dos".
+
 SENTIMIENTOS:
-Si se indican sentimientos, intégralos de forma natural en varias de las ideas (no hace falta en todas).
-Vienen como sustantivos (por ejemplo "Frustración"). Para no suponer si la persona es hombre o mujer,
-prefiere expresiones sin género, como "siento frustración", "hay cansancio en mí" o "una parte de mí está frustrada".
-Si no se indican sentimientos, puedes nombrar sentimientos probables, siempre como posibilidad y sin darlos por hecho.
+Usa SOLO los sentimientos indicados y no inventes otros distintos.
+Vienen como sustantivos (por ejemplo "Vergüenza"); conviértelos en expresiones naturales con el género correcto.
+Intégralos de forma natural en varias de las ideas (no hace falta en todas).
+Si no se indican sentimientos, puedes nombrar sentimientos probables, siempre como pregunta o posibilidad, sin darlos por hecho.
 
 LENGUAJE DE PARTES (IFS):
 En cada tipo, exactamente 2 de las 4 ideas deben usar lenguaje de partes y las otras 2 deben ser CNV clásica sin mencionar partes.
@@ -30,8 +43,9 @@ La persona quiere cuidar SU PROPIA necesidad en la situación que describe. Los 
 
 2. "accion" (pedidos de acción): pedidos concretos, positivos (lo que sí se quiere, no lo que no),
    realizables en el presente o en un plazo claro, y formulados como pregunta abierta a un sí o un no,
-   por ejemplo: "¿Estarías dispuesto/a a...?". Nada de exigencias ni culpas.
-   En las ideas con lenguaje de partes: "Una parte de mí está [sentimiento] y necesita [necesidad]. ¿Estarías dispuesto/a a...?".
+   por ejemplo: "¿Estarías dispuesto a...?" o "¿Estarías dispuesta a...?" según el género de la otra persona.
+   Nada de exigencias ni culpas.
+   En las ideas con lenguaje de partes: "Una parte de mí está [sentimiento] y necesita [necesidad]. ¿Estarías dispuesto a...?".
 
 3. "estrategias": acciones que la persona puede hacer por sí misma para cuidar su necesidad,
    sin depender de una sola persona. Varía el tipo: autoempatía, apoyo de otras personas,
@@ -40,17 +54,23 @@ La persona quiere cuidar SU PROPIA necesidad en la situación que describe. Los 
    por ejemplo: "Dedica cinco minutos a escuchar a la parte de ti que se siente ignorada y pregúntale qué necesita de ti".
 
 Si en la situación no hay otra persona involucrada, dirige los pedidos de conexión y de acción a la propia persona
-(por ejemplo: "¿Qué necesita escuchar de mí esta parte ahora?" o "¿Estoy dispuesto/a a...?").`;
+(por ejemplo: "¿Qué necesita escuchar de mí esta parte ahora?" o "¿Estoy dispuesto a...?").`;
 
 const SISTEMA_OTRA = `${BASE}
 
 La persona quiere atender la necesidad de OTRA PERSONA involucrada en la situación.
-Esa necesidad y los sentimientos indicados son suposiciones: la persona los intuye, pero no los conoce con certeza.
+Esa necesidad y los sentimientos indicados son de la otra persona y son suposiciones: el usuario los intuye, pero no los conoce con certeza.
 Todas las ideas se dirigen a la otra persona o describen lo que el usuario puede hacer por ella.
+
+REGLA CLAVE: TODAS las ideas deben servir a la necesidad de la otra persona.
+No incluyas pedidos que en realidad sirven a las necesidades del usuario (por ejemplo, pedirle puntualidad
+a quien llegó tarde, o acordar reglas para la próxima vez) presentados como si fueran apoyo.
+Si la otra persona siente algo difícil como vergüenza, culpa o miedo, prioriza la empatía, la aceptación
+y la tranquilidad antes que cualquier acuerdo.
 
 1. "conexion" (pedidos de conexión): adivinanzas empáticas en forma de pregunta, para verificar
    si se intuyó bien lo que la otra persona siente y necesita, sin darlo por hecho.
-   Ejemplos de estilo: "¿Sientes frustración porque necesitas más apoyo con esto?",
+   Ejemplos de estilo: "¿Te sientes avergonzada porque es importante para ti cumplir lo que prometes?",
    "¿Es importante para ti que se tome en cuenta tu opinión?".
    En las ideas con lenguaje de partes: "¿Será que una parte de ti está... y necesita...?".
 
@@ -58,7 +78,7 @@ Todas las ideas se dirigen a la otra persona o describen lo que el usuario puede
    para contribuir a la necesidad de la otra persona, formulados como pregunta abierta a un sí o un no.
    Ejemplos de estilo: "¿Te ayudaría si yo...?", "¿Te gustaría que...?".
    En las ideas con lenguaje de partes, se reconoce primero a la parte del otro y luego se ofrece,
-   por ejemplo: "Si una parte de ti está agotada, ¿te ayudaría si yo me encargo de...?".
+   usando solo los sentimientos indicados, por ejemplo: "Si una parte de ti siente vergüenza, ¿te ayudaría saber que...?".
 
 3. "estrategias": acciones que el usuario puede hacer por su cuenta para contribuir a la necesidad
    de la otra persona, sin descuidar las suyas. Varía el tipo: escucha empática, presencia,
@@ -66,11 +86,24 @@ Todas las ideas se dirigen a la otra persona o describen lo que el usuario puede
    En las ideas con lenguaje de partes, el usuario atiende primero a sus propias partes para poder
    acercarse desde el Self, por ejemplo: "Antes de hablarle, nota si una parte tuya está molesta y pídele un poco de espacio".`;
 
+const EXTRA_INCIERTA = `
+
+NECESIDAD DESCONOCIDA:
+El usuario no sabe qué necesidad está activa en la otra persona.
+1. En "posibles", propone 4 necesidades probables de la otra persona (una a tres palabras cada una, con mayúscula inicial),
+   coherentes con la situación y con los sentimientos indicados.
+2. En "conexion", convierte esas necesidades posibles en adivinanzas empáticas para verificarlas con la persona, una por cada necesidad.
+3. En "accion" y "estrategias", da ideas que sirvan sin importar cuál sea la necesidad:
+   escuchar, preguntar, ofrecer presencia, tranquilizar, aceptar.`;
+
 export async function POST(req) {
   try {
-    const { situacion, necesidad, duenio, sentimientos } = await req.json();
+    const { situacion, necesidad, duenio, sentimientos, genero, incierta } = await req.json();
 
-    if (!situacion?.trim() || !necesidad?.trim()) {
+    const esDeOtra = duenio === "otra";
+    const esIncierta = esDeOtra && incierta === true;
+
+    if (!situacion?.trim() || (!esIncierta && !necesidad?.trim())) {
       return Response.json({ error: "Faltan la situación o la necesidad." }, { status: 400 });
     }
 
@@ -86,20 +119,33 @@ export async function POST(req) {
       ? sentimientos.map((s) => String(s).trim()).filter(Boolean).slice(0, 15)
       : [];
 
-    const esDeOtra = duenio === "otra";
+    const formato = esIncierta
+      ? `{"posibles": ["...", "...", "...", "..."], "conexion": ["...", "...", "...", "..."], "accion": ["...", "...", "...", "..."], "estrategias": ["...", "...", "...", "..."]}`
+      : `{"conexion": ["...", "...", "...", "..."], "accion": ["...", "...", "...", "..."], "estrategias": ["...", "...", "...", "..."]}`;
+
     const sistema =
       (esDeOtra ? SISTEMA_OTRA : SISTEMA_MIA) +
+      (esIncierta ? EXTRA_INCIERTA : "") +
       `
 
 Responde SOLO con un objeto JSON válido, sin texto adicional y sin bloques de código, con esta forma exacta:
-{"conexion": ["...", "...", "...", "..."], "accion": ["...", "...", "...", "..."], "estrategias": ["...", "...", "...", "..."]}`;
+${formato}`;
 
-    const lineas = [`Situación: ${situacion.trim()}`];
+    const lineas = [];
+    if (genero === "hombre" || genero === "mujer") {
+      lineas.push(`Yo, quien escribe, soy ${genero}.`);
+    }
+    lineas.push(`Situación (contada por mí): ${situacion.trim()}`);
+
     if (esDeOtra) {
       if (listaSentimientos.length > 0) {
         lineas.push(`Sentimientos que intuyo en la otra persona: ${listaSentimientos.join(", ")}`);
       }
-      lineas.push(`Necesidad que intuyo en la otra persona y quiero apoyar: ${necesidad.trim()}`);
+      if (esIncierta) {
+        lineas.push("Necesidad de la otra persona: no la sé, ayúdame a intuirla.");
+      } else {
+        lineas.push(`Necesidad que intuyo en la otra persona y quiero apoyar: ${necesidad.trim()}`);
+      }
     } else {
       if (listaSentimientos.length > 0) {
         lineas.push(`Mis sentimientos: ${listaSentimientos.join(", ")}`);
@@ -116,7 +162,7 @@ Responde SOLO con un objeto JSON válido, sin texto adicional y sin bloques de c
       },
       body: JSON.stringify({
         model: "claude-haiku-5-5",
-        max_tokens: 2500,
+        max_tokens: 3000,
         system: sistema,
         messages: [{ role: "user", content: lineas.join("\n") }],
       }),
@@ -142,6 +188,7 @@ Responde SOLO con un objeto JSON válido, sin texto adicional y sin bloques de c
     const ideas = JSON.parse(texto.slice(inicio, fin + 1));
 
     return Response.json({
+      posibles: esIncierta ? ideas.posibles || [] : [],
       conexion: ideas.conexion || [],
       accion: ideas.accion || [],
       estrategias: ideas.estrategias || [],
