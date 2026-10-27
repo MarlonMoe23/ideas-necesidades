@@ -6,6 +6,12 @@ Escribe en español latinoamericano neutro, tuteando, con frases naturales y lis
 Cada idea debe ser una sola frase de máximo 40 palabras, sin juicios, diagnósticos, etiquetas ni "deberías".
 Genera exactamente 4 ideas para cada tipo.
 
+SENTIMIENTOS:
+Si se indican sentimientos, intégralos de forma natural en varias de las ideas (no hace falta en todas).
+Vienen como sustantivos (por ejemplo "Frustración"). Para no suponer si la persona es hombre o mujer,
+prefiere expresiones sin género, como "siento frustración", "hay cansancio en mí" o "una parte de mí está frustrada".
+Si no se indican sentimientos, puedes nombrar sentimientos probables, siempre como posibilidad y sin darlos por hecho.
+
 LENGUAJE DE PARTES (IFS):
 En cada tipo, exactamente 2 de las 4 ideas deben usar lenguaje de partes y las otras 2 deben ser CNV clásica sin mencionar partes.
 Usar lenguaje de partes significa HABLAR POR la parte, no DESDE la parte: el Self nombra con calma a la parte,
@@ -15,7 +21,7 @@ Nunca uses las partes para culpar, diagnosticar o etiquetar a nadie.`;
 
 const SISTEMA_MIA = `${BASE}
 
-La persona quiere cuidar SU PROPIA necesidad en la situación que describe.
+La persona quiere cuidar SU PROPIA necesidad en la situación que describe. Los sentimientos indicados son suyos.
 
 1. "conexion" (pedidos de conexión): preguntas para saber cómo le llega a la otra persona lo que se dijo o qué entendió.
    Ejemplos de estilo: "¿Cómo te sientes al escuchar esto?", "¿Podrías decirme qué entendiste de lo que te dije?".
@@ -25,7 +31,7 @@ La persona quiere cuidar SU PROPIA necesidad en la situación que describe.
 2. "accion" (pedidos de acción): pedidos concretos, positivos (lo que sí se quiere, no lo que no),
    realizables en el presente o en un plazo claro, y formulados como pregunta abierta a un sí o un no,
    por ejemplo: "¿Estarías dispuesto/a a...?". Nada de exigencias ni culpas.
-   En las ideas con lenguaje de partes: "Una parte de mí se siente [sentimiento] y necesita [necesidad]. ¿Estarías dispuesto/a a...?".
+   En las ideas con lenguaje de partes: "Una parte de mí está [sentimiento] y necesita [necesidad]. ¿Estarías dispuesto/a a...?".
 
 3. "estrategias": acciones que la persona puede hacer por sí misma para cuidar su necesidad,
    sin depender de una sola persona. Varía el tipo: autoempatía, apoyo de otras personas,
@@ -39,14 +45,14 @@ Si en la situación no hay otra persona involucrada, dirige los pedidos de conex
 const SISTEMA_OTRA = `${BASE}
 
 La persona quiere atender la necesidad de OTRA PERSONA involucrada en la situación.
-Esa necesidad es una suposición: la persona la intuye, pero no la conoce con certeza.
+Esa necesidad y los sentimientos indicados son suposiciones: la persona los intuye, pero no los conoce con certeza.
 Todas las ideas se dirigen a la otra persona o describen lo que el usuario puede hacer por ella.
 
 1. "conexion" (pedidos de conexión): adivinanzas empáticas en forma de pregunta, para verificar
    si se intuyó bien lo que la otra persona siente y necesita, sin darlo por hecho.
-   Ejemplos de estilo: "¿Te sientes frustrado porque necesitas más apoyo con esto?",
+   Ejemplos de estilo: "¿Sientes frustración porque necesitas más apoyo con esto?",
    "¿Es importante para ti que se tome en cuenta tu opinión?".
-   En las ideas con lenguaje de partes: "¿Será que una parte de ti se siente... y necesita...?".
+   En las ideas con lenguaje de partes: "¿Será que una parte de ti está... y necesita...?".
 
 2. "accion" (pedidos de acción): ofrecimientos o pedidos concretos, positivos y realizables
    para contribuir a la necesidad de la otra persona, formulados como pregunta abierta a un sí o un no.
@@ -62,7 +68,7 @@ Todas las ideas se dirigen a la otra persona o describen lo que el usuario puede
 
 export async function POST(req) {
   try {
-    const { situacion, necesidad, duenio } = await req.json();
+    const { situacion, necesidad, duenio, sentimientos } = await req.json();
 
     if (!situacion?.trim() || !necesidad?.trim()) {
       return Response.json({ error: "Faltan la situación o la necesidad." }, { status: 400 });
@@ -76,6 +82,10 @@ export async function POST(req) {
       );
     }
 
+    const listaSentimientos = Array.isArray(sentimientos)
+      ? sentimientos.map((s) => String(s).trim()).filter(Boolean).slice(0, 15)
+      : [];
+
     const esDeOtra = duenio === "otra";
     const sistema =
       (esDeOtra ? SISTEMA_OTRA : SISTEMA_MIA) +
@@ -84,9 +94,18 @@ export async function POST(req) {
 Responde SOLO con un objeto JSON válido, sin texto adicional y sin bloques de código, con esta forma exacta:
 {"conexion": ["...", "...", "...", "..."], "accion": ["...", "...", "...", "..."], "estrategias": ["...", "...", "...", "..."]}`;
 
-    const contenido = esDeOtra
-      ? `Situación: ${situacion.trim()}\nNecesidad que intuyo en la otra persona y quiero apoyar: ${necesidad.trim()}`
-      : `Situación: ${situacion.trim()}\nMi necesidad que quiero cuidar: ${necesidad.trim()}`;
+    const lineas = [`Situación: ${situacion.trim()}`];
+    if (esDeOtra) {
+      if (listaSentimientos.length > 0) {
+        lineas.push(`Sentimientos que intuyo en la otra persona: ${listaSentimientos.join(", ")}`);
+      }
+      lineas.push(`Necesidad que intuyo en la otra persona y quiero apoyar: ${necesidad.trim()}`);
+    } else {
+      if (listaSentimientos.length > 0) {
+        lineas.push(`Mis sentimientos: ${listaSentimientos.join(", ")}`);
+      }
+      lineas.push(`Mi necesidad que quiero cuidar: ${necesidad.trim()}`);
+    }
 
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -99,7 +118,7 @@ Responde SOLO con un objeto JSON válido, sin texto adicional y sin bloques de c
         model: "claude-haiku-5-5",
         max_tokens: 2500,
         system: sistema,
-        messages: [{ role: "user", content: contenido }],
+        messages: [{ role: "user", content: lineas.join("\n") }],
       }),
     });
 

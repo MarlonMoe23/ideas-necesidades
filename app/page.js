@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { necesidades } from "../lib/necesidades";
+import { sentimientos as listaSentimientos } from "../lib/sentimientos";
 
 function normalizar(texto) {
   return texto
@@ -56,15 +57,52 @@ const SECCIONES = {
 
 export default function Home() {
   const [situacion, setSituacion] = useState("");
-  const [necesidad, setNecesidad] = useState("");
   const [duenio, setDuenio] = useState("mia"); // "mia" o "otra"
+  const [sentimientos, setSentimientos] = useState([]);
+  const [textoSentimiento, setTextoSentimiento] = useState("");
+  const [necesidad, setNecesidad] = useState("");
   const [ideas, setIdeas] = useState(null);
   const [duenioConsultado, setDuenioConsultado] = useState("mia");
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
   const [aviso, setAviso] = useState("");
 
-  // Filtra la lista según lo que se escribe en el campo de necesidad
+  // ── Sentimientos: sugerencias mientras se escribe ──────────────────────
+  const filtroS = normalizar(textoSentimiento);
+  const sugerencias = filtroS
+    ? listaSentimientos
+        .filter((s) => normalizar(s).includes(filtroS) && !sentimientos.includes(s))
+        .slice(0, 8)
+    : [];
+  const yaExiste =
+    listaSentimientos.some((s) => normalizar(s) === filtroS) ||
+    sentimientos.some((s) => normalizar(s) === filtroS);
+
+  const agregarSentimiento = (texto) => {
+    const limpio = texto.trim();
+    if (!limpio) return;
+    if (sentimientos.some((s) => normalizar(s) === normalizar(limpio))) {
+      setTextoSentimiento("");
+      return;
+    }
+    const conMayuscula = limpio.charAt(0).toUpperCase() + limpio.slice(1);
+    setSentimientos([...sentimientos, conMayuscula]);
+    setTextoSentimiento("");
+  };
+
+  const quitarSentimiento = (s) => {
+    setSentimientos(sentimientos.filter((x) => x !== s));
+  };
+
+  const alPresionarTecla = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (sugerencias.length > 0) agregarSentimiento(sugerencias[0]);
+      else agregarSentimiento(textoSentimiento);
+    }
+  };
+
+  // ── Necesidades: filtro de la lista ────────────────────────────────────
   const filtro = normalizar(necesidad);
   const categoriasFiltradas = necesidades
     .map((c) => ({
@@ -82,6 +120,7 @@ export default function Home() {
     setTimeout(() => setAviso(""), 2000);
   };
 
+  // ── Generar ideas ──────────────────────────────────────────────────────
   const generar = async () => {
     setError("");
     if (!situacion.trim()) {
@@ -100,6 +139,7 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           situacion: situacion.trim(),
+          sentimientos,
           necesidad: necesidad.trim(),
           duenio,
         }),
@@ -127,13 +167,16 @@ export default function Home() {
     if (!ideas) return "";
     const bloque = (titulo, lista) =>
       `*${titulo}:*\n${(lista || []).map((i) => `• ${i}`).join("\n")}`;
-    return [
-      `*${tituloResultado()}*`,
-      `*Situación:* ${situacion.trim()}`,
+    const partes = [`*${tituloResultado()}*`, `*Situación:* ${situacion.trim()}`];
+    if (sentimientos.length > 0) {
+      partes.push(`*Sentimientos:* ${sentimientos.join(", ")}`);
+    }
+    partes.push(
       bloque("Pedidos de conexión", ideas.conexion),
       bloque("Pedidos de acción", ideas.accion),
-      bloque("Estrategias", ideas.estrategias),
-    ].join("\n\n");
+      bloque("Estrategias", ideas.estrategias)
+    );
+    return partes.join("\n\n");
   };
 
   const copiar = async (texto, mensaje = "Copiado") => {
@@ -151,8 +194,10 @@ export default function Home() {
 
   const nuevaConsulta = () => {
     setSituacion("");
-    setNecesidad("");
     setDuenio("mia");
+    setSentimientos([]);
+    setTextoSentimiento("");
+    setNecesidad("");
     setIdeas(null);
     setError("");
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -162,10 +207,10 @@ export default function Home() {
     <main className="contenedor">
       <header className="encabezado">
         <h1>Cuidar Necesidades</h1>
-                <p>Ideas para pedir y actuar desde la CNV, con lenguaje de partes</p>
+        <p>Ideas para pedir y actuar desde la CNV, con lenguaje de partes</p>
       </header>
 
-      {/* Situación */}
+      {/* 1. Situación */}
       <section className="tarjeta">
         <h2>1. La situación</h2>
         <p className="ayuda">Describe en pocas palabras qué está pasando.</p>
@@ -176,17 +221,17 @@ export default function Home() {
         />
       </section>
 
-      {/* Necesidad */}
+      {/* 2. Sentimientos */}
       <section className="tarjeta">
-        <h2>2. La necesidad</h2>
+        <h2>2. Los sentimientos</h2>
 
-        <p className="ayuda">¿De quién es la necesidad que quieres atender?</p>
+        <p className="ayuda">¿De quién son los sentimientos y la necesidad?</p>
         <div className="selector">
           <button
             className={`opcion ${duenio === "mia" ? "activa" : ""}`}
             onClick={() => setDuenio("mia")}
           >
-            🙋 Mía
+            🙋 Míos
           </button>
           <button
             className={`opcion ${duenio === "otra" ? "activa" : ""}`}
@@ -196,6 +241,67 @@ export default function Home() {
           </button>
         </div>
 
+        <p className="ayuda">
+          {duenio === "mia"
+            ? "Escribe y elige lo que sientes. Puedes agregar varios."
+            : "Escribe y elige lo que intuyes que siente la otra persona."}
+        </p>
+
+        {sentimientos.length > 0 && (
+          <div className="seleccionados">
+            {sentimientos.map((s) => (
+              <button key={s} className="chip sentimiento" onClick={() => quitarSentimiento(s)}>
+                {s} ×
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="campo-envoltura">
+          <input
+            className="campo"
+            type="text"
+            value={textoSentimiento}
+            onChange={(e) => setTextoSentimiento(e.target.value)}
+            onKeyDown={alPresionarTecla}
+            placeholder="Escribe un sentimiento... (ej: frustración)"
+            enterKeyHint="done"
+          />
+          {textoSentimiento && (
+            <button
+              className="limpiar"
+              onClick={() => setTextoSentimiento("")}
+              aria-label="Borrar"
+            >
+              ×
+            </button>
+          )}
+        </div>
+
+        {filtroS && (
+          <div className="sugerencias">
+            {sugerencias.map((s) => (
+              <button key={s} className="chip" onClick={() => agregarSentimiento(s)}>
+                {s}
+              </button>
+            ))}
+            {!yaExiste && (
+              <button
+                className="chip agregar"
+                onClick={() => agregarSentimiento(textoSentimiento)}
+              >
+                + Agregar "{textoSentimiento.trim()}"
+              </button>
+            )}
+          </div>
+        )}
+
+        <p className="toque">Opcional, pero ayuda a que las ideas sean más precisas.</p>
+      </section>
+
+      {/* 3. Necesidad */}
+      <section className="tarjeta">
+        <h2>3. La necesidad</h2>
         <p className="ayuda">
           {duenio === "mia"
             ? "Elige tu necesidad de la lista o escríbela tú mismo."
